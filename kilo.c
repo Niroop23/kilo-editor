@@ -277,12 +277,25 @@ void abFree(struct abuf *ab)
 
 /*** output ***/
 
+void editorScroll()
+{
+	if (E.cy < E.rowoff)
+	{
+		E.rowoff = E.cy;
+	}
+	if (E.cy >= E.rowoff + E.screenrows)
+	{
+		E.rowoff = E.cy - E.screenrows + 1;
+	}
+}
+
 void editorDrawRows(struct abuf *ab)
 {
 	int y;
 	for (y = 0; y < E.screenrows; y++)
 	{
-		if (y >= E.numrows)
+		int filerow = y + E.rowoff;
+		if (filerow >= E.numrows)
 		{
 			if (E.numrows == 0 && y == E.screenrows / 3)
 			{
@@ -307,10 +320,10 @@ void editorDrawRows(struct abuf *ab)
 		}
 		else
 		{
-			int len = E.row[E.numrows].size;
+			int len = E.row[filerow].size;
 			if (len > E.screencols)
 				len = E.screencols;
-			abAppend(ab, E.row[E.numrows].chars, len);
+			abAppend(ab, E.row[filerow].chars, len);
 		}
 
 		abAppend(ab, "\x1b[K", 3);
@@ -321,6 +334,8 @@ void editorDrawRows(struct abuf *ab)
 
 void editorRefreshScreen()
 {
+	editorScroll();
+
 	struct abuf ab = ABUF_INIT;
 
 	abAppend(&ab, "\x1b[?25l", 6);
